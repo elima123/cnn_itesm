@@ -1,0 +1,13 @@
+$contador = 1
+Get-ChildItem "C:\Users\Usuario\Desktop\tumor_dataset\no" -File | Sort-Object Name | ForEach-Object {
+$nuevo = "images_no_{0:D3}{1}" -f $contador, $_.Extension
+Rename-Item $_.FullName $nuevo
+$contador++
+}
+
+$contador = 1
+Get-ChildItem "C:\Users\Usuario\Desktop\tumor_dataset\yes" -File | Sort-Object Name | ForEach-Object {
+$nuevo = "images_yes_{0:D3}{1}" -f $contador, $_.Extension
+Rename-Item $_.FullName $nuevo
+$contador++
+}
