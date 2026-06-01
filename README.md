@@ -9,3 +9,7 @@ El dataset completo contiene un total de 253 imágenes, distribuidas en 155 imá
 Para la clase **yes**, se utilizaron 93 imágenes para entrenamiento, 31 imágenes para prueba y 31 imágenes para validación, manteniendo un total de 155 imágenes. Por otro lado, la clase **no** se dividió en 60 imágenes para entrenamiento, 19 imágenes para prueba y 19 imágenes para validación, con un total de 98 imágenes.
 
 Esta distribución permite entrenar el modelo de aprendizaje automático utilizando la mayor parte de los datos disponibles, mientras que los conjuntos de validación y prueba permiten evaluar el desempeño y la capacidad de generalización del modelo frente a imágenes no vistas previamente.
+
+Se aplicaron las siguientes transformaciones a las imagenes para aumentar el rendimiento del modelo y mejorar su entrenamiento.
+- Eliminar bordes negros alrededor de las imagenes MRI.
+- Normalizar el tamaño de las imagenes MRI a 256 x 256.
