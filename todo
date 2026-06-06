@@ -1,0 +1,21 @@
+- A final comparative table
+| Modelo         | Accuracy | Precision | Recall | F1   | AUC  |
+| -------------- | -------- | --------- | ------ | ---- | ---- |
+| CNN            | 0.84     | 0.82      | 0.80   | 0.81 | 0.88 |
+| ResNet50       | 0.91     | 0.90      | 0.92   | 0.91 | 0.95 |
+| EfficientNetB0 | 0.93     | 0.92      | 0.94   | 0.93 | 0.97 |
+| ViT            | 0.92     | 0.91      | 0.93   | 0.92 | 0.96 |
+
+CNN propia (baseline)
+
+microsoft/resnet-18
+https://huggingface.co/microsoft/resnet-18
+https://arxiv.org/abs/1512.03385
+
+microsoft/resnet-50
+https://huggingface.co/microsoft/resnet-50
+https://arxiv.org/abs/1512.03385
+
+google/efficientnet-b0
+https://huggingface.co/google/efficientnet-b0
+https://arxiv.org/abs/1905.11946
