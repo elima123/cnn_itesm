@@ -28,16 +28,17 @@ These preprocessing steps were performed using the `cleandataset.py` script. The
 
 ### Data splitting
 ```text
-dataset__readytouse/
-├── train/
-│   ├── yes/
-│   └── no/
-├── validation/
-│   ├── yes/
-│   └── no/
-└── test/
-    ├── yes/
-    └── no/
+data/
+└── dataset__readytouse/
+    ├── train/
+    │   ├── yes/
+    │   └── no/
+    ├── validation/
+    │   ├── yes/
+    │   └── no/
+    └── test/
+        ├── yes/
+        └── no/
 ```
 The dataset was manually split into three subsets: **training**, **testing**, and **validation**. The resulting directory structure was stored in the `dataset_readytouse` folder.
 
@@ -68,53 +69,334 @@ Due to the limited size of the dataset, data augmentation techniques were applie
 
 These augmentations were applied dynamically during training, generating slightly different versions of the images at each epoch and reducing the risk of overfitting.
 
-## Model training # TO DO
+## Model training
+### Hyperparameters (Model Configuration)
 
-All models were trained for 100 epochs with a batch size of 8. The loss function used was categorical crossentropy and the optimizer used was Adam. The learning rate was set to 0.00001. 
+The initial model configuration is the one below. This came from multiple references to adecuate and increase the model performance during training. Model configurations changed during iterations and after switching into another model, but the main configuration idea was compared through all investigation.
 
-## Models # TO DO
+| Parameter | Value / Configuration | Rationale / Reference |
+| --- | --- | --- |
+| **Input Dimensions** | 256 | 256 x 256 pixels square resolution for spatial consistency. |
+| **Batch Size** | 8 | Set in accordance with Angelina et al. (2026, p. 9) for memory constraints. |
+| **Epochs** | 100 | Sufficient horizon to ensure convergence. |
+| **Learning Rate** | 0.0001 (Static) | Set in accordance with He et al. (2015, p. 4). |
+| **Dropout Rate** | 0.5 | Applied for regularization to mitigate overfitting (Hinton et al., 2012, p. 2). |
+| **Activation Function** | Sigmoid | Employed in the final layer for single-class probability mapping. |
+| **Loss Function** | Binary Cross-Entropy | Selected to complement the single-neuron sigmoid output. |
+| **Optimizer** | Adam | Back propagation optimization. |
+| **Data Augmentation** | Rotation, translation, zoom, and contrast | Applied only to training batches to reduce overfitting in the small dataset. |
+| **Threshold** | 0.5 | The number required to identify and separate classes between each other. Since the main class is "yes" (tumor found), predicting a number over 0.5 means the neuronal network labeled it as tumor found.
 
-### First Iteration # TO DO
 
-[First Model Notebook](./classifier.ipynb)
 
-#### Model description # TO DO
 
-The first model was a sequential model with the following architecture:
-- Conv2D layer with 32 filters, kernel size of (3, 3), and ReLU activation function
-- MaxPooling2D layer with pool size of (2, 2)
-- Conv2D layer with 32 filters, kernel size of (3, 3), and ReLU activation function
-- MaxPooling2D layer with pool size of (2, 2)
+## 1. Model cnn_propia_01
+
+The baseline model was inspired from the VGG19 architecture defined by He, K., Zhang, et al. (2015). The first model was a sequential model with the following architecture having 3 Blocks.
+
+### Training Configuration
+
+- Image size: 256 × 256  
+- Batch size: 8  
+- Epochs: 100  
+- Learning rate: 0.0001  
+- Dropout: 0.5  
+- Loss function: binary crossentropy  
+- Output activation: sigmoid  
+- Label mode: binary  
+- Early stopping patience: 10  
+- Classification threshold: 0.5  
+- Random seed: 42  
+
+Each block contained:
+- 2 Conv2D layer with 16 filters, kernel size of (3, 3), and ReLU activation function.
+- Followed by a MaxPooling2D layer of (2, 2).
+
+Lastly, the head contained:
 - Flatten layer
-- Dense layer with 256 units and ReLU activation function
-- Dense layer with 90 units and softmax activation function
+- Dense layer with 32 units and ReLU activation function
+- Dropout 0.5
+- Dense 1, sigmoid activation
 
-#### Results # TO DO
+Thre results showed 536,401 params (2.05 MB), which, after investigation, seemed like quite a lot for this dataset (253 images).
 
-| Metric    | Train | Test |
-|-----------|-------|------|
-| Loss      | 26.5  | 22.5 |
-| Accuracy  | 3.07  | 3.44 |
-| Precision | -     | 0.26 |
-| Recall    | -     | 0.22 |
-| F1        | -     | 0.20 |
-![Confusion matrix](./assets/conf_mat_4.png)
+|Accuracy|Precision|Recall|F1 Score|Specificity|ROC-AUC|
+|---|---|---|--|---|--|
+|0.6274509803921569|0.62|1.0|0.7654320987654321|0.05|0.732258064516129|
 
-### Conclusions and next steps # TO DO
+![Confusion matrix](./reports/cnn_propia_01/confusion_matrix.png)
 
-The model was able to learn some useful features, but the accuracy and F1 score are still very low. Most importantly, the test accuracy and loss are considerably worse than the training accuracy and loss. This indicates that the model is overfitting to the training data. The confusion matrix shows that the model is able to classify some classes correctly, but it is still very far from being able to classify all classes correctly and seems to predict porcupine more often, although it is still not significant enough.
+The initial results appeared very promising for a first iteration of the model. With an F1 score of 0.76 and an AUC of 0.73, the model seemed to perform well overall.
 
-Based on the observations the next proposed step is using transfer learning with the VGG16 model. The VGG16 model was trained on the ImageNet dataset, which has a similar number of classes and images. The idea is to use the weights of the VGG16 model as a starting point for the training of the new model. This should help the model to learn useful features from the images and improve the accuracy. This weights will be frozen to avoid overfitting, they will just be used for feature extraction.
+However, a closer inspection of the confusion matrix revealed a major limitation. Although the model achieved high recall, it was almost completely unable to identify healthy images (tumor not found). This indicates that the model was heavily biased toward predicting the presence of a tumor, making the overall performance metrics misleading.
 
-The training accuracy and loss are worst than the previous model but the test metrics all improved, by a very low margin but improved nonetheless. The model did take more time to train (100 extra epochs) and there is still overfitting but it was considerably lower ad the training and testing metrics were closer. This could imply that further training will still be worth compared to the previous models that would just continue to overfit.
+The learning rate and training process appeared to be stable. Loss curves were used to evaluate whether the model was overfitting or underfitting. As shown in the training history, both the training and validation losses followed a similar downward trend, suggesting that the model was learning consistently and was not exhibiting clear signs of overfitting.
 
-## Discussion # TO DO 
+![Loss metric](./reports/cnn_propia_01/loss.png)
+![Accuracy metric](./reports/cnn_propia_01/accuracy.png)
 
-When compared with other attempts of image classification with this limited dataset, the results are quite underwhelming. As seen in [this notebook](https://www.kaggle.com/code/muhammadfaizan65/90-animals-image-classification-efficientnetb3/notebook) The author was able to achieve an F1 score of 0.94 and validation accuracy of 93%. This was achieved using the EfficientNetB3 model with transfer learning and data augmentation. It seem that the VGG16 model is not the best choice for this task. The EfficientNetB3 model is more recent and has been shown to outperform the VGG16 model in most tasks as shown in [2].
+Based on these observations, the next experiment focused on reducing the learning rate from 0.001 to 0.0001. A lower learning rate should allow the model to learn more discriminative features from the images and potentially improve classification performance. The model will be trained from scratch to ensure a fair evaluation of the new configuration.
 
-## References # TO DO , add hugging face's papers
 
-[1] He, K., Zhang, X., Ren, S., & Sun, J. (2015). *Deep Residual Learning for Image Recognition*. arXiv:1512.03385.
-[2]	Angelina, C. L., Xiao, F.-R., Vyas, S., Yang, P.-C., Chang, H.-T., & Luo, Y. (2026). Mod-SE(2): A geometric deep learning framework for brain tumor classification and segmentation in MRI images. Journal of Biomedical Science, 33, Article 11. https://doi.org/10.1186/s12929-025-01213-y
-[3] Video Lecture: https://www.youtube.com/watch?v=udaRL6NdItY
-[4] Video Lecture: https://www.youtube.com/watch?v=12UvnLp-8qg
+
+
+## 2. Model cnn_propia_02
+
+Each block consisted of two Conv2D layers with 16 filters, a kernel size of (3, 3), and ReLU activation functions, followed by a MaxPooling2D layer with a pool size of (2, 2). The classification head included a Flatten layer, a Dense layer with 32 units and ReLU activation, a Dropout layer with a rate of 0.5, and a final Dense layer with a single unit and a sigmoid activation function for binary classification.
+
+### Training Configuration
+
+- Image size: 256 × 256  
+- Batch size: 8  
+- Epochs: 100  
+- Learning rate: 0.001  
+- Dropout: 0.5  
+- Loss function: binary crossentropy  
+- Output activation: sigmoid  
+- Label mode: binary  
+- Early stopping patience: 10
+- Classification threshold: 0.5  
+- Random seed: 42  
+
+Now, with the new learning rate of 0.001 these are the results:
+
+|Accuracy|Precision|Recall|F1 Score|Specificity|ROC-AUC|
+|--|--|--|--|--|--|
+|0.5490196078431373|0.6052631578947368|0.7419354838709677|0.6666666666666666|0.25|0.5129032258064516|
+
+![Confusion matrix](./reports/cnn_propia_02/confusion_matrix.png)
+
+Although the F1 score and recall decreased compared to the previous model, the specificity improved, which is also reflected in the confusion matrix. While the overall performance is still not satisfactory, the increase in specificity represents a meaningful improvement, as the model is beginning to better distinguish between healthy and affected images. 
+
+Despite increasing the learning rate, the model still failed to correctly identify negative cases. This suggests that the issue may not be related to the optimization process alone, but rather to the model architecture itself. One possible explanation is that the network has insufficient capacity to learn the features required to distinguish between healthy and affected images. 
+
+Additionally, the loss decreased sharply from 2.5 to 0.6 during the first epoch, which compressed the scale of the loss plot and made it difficult to visually analyze the remaining training progress. Another observation was that training consistently stopped after 10 epochs, matching the EarlyStopping patience value. This raises the possibility that the model is being stopped before it has enough time to fully converge.
+
+![Loss metric](./reports/cnn_propia_02/loss.png)
+![Accuracy metric](./reports/cnn_propia_02/accuracy.png)
+
+
+These are the changes after for the next model iteration:
+- Learning rate: 0.01 <- 0.001
+- EarlyStopping patience: 15 epochs <- 10 epochs
+- Switch checkpoint saving criteria: Save best based on F1 Score granted from validation <- Accuracy from validation
+- Total trainable params: 8,417,377 params <- ~500k params
+
+Finally, the architecture was redesigned to significantly increase the number of trainable parameters, increasing from approximately 500,000 to around 8.4 million parameters in an effort to improve generalization.
+
+Architecture changes:
+- Removed one block from the network (Conv2D + Conv2D + MaxPooling2D)
+- Increased the number of neurons for each convolutional layer: 32 <- 16
+
+
+
+
+## 3. Model cnn_propia_03
+
+The performance decrease again notibly. The Recall came back to 1.0 and F1 score increased to 0.75. Comparing these results to the confussion matrix, the model is again predicting everything as tumor found.
+
+### Training Configuration
+
+- Image size: 256 × 256  
+- Batch size: 8  
+- Epochs: 100  
+- Learning rate: 0.01  
+- Dropout: 0.5  
+- Loss function: binary crossentropy  
+- Output activation: sigmoid  
+- Label mode: binary  
+- Early stopping patience: 15
+- Classification threshold: 0.5  
+- Random seed: 42  
+
+The model continues to predict almost all samples as positive, which is reflected in the evaluation metrics. Although accuracy is 0.6159 and AUC is 0.5825, the F1 score remains relatively high at 0.7623 due to the imbalance in predictions. Recall is consistently 1.0000 on both training and validation sets, indicating that the model is classifying all cases as positive and failing to correctly identify negative samples. In this context, recall is not a reliable indicator of performance, and specificity becomes the more relevant metric for evaluating model behavior.
+
+Given the small size of the dataset, the next step is to move toward transfer learning in order to leverage pre-trained feature extractors. During analysis, it was also observed that the use of a Flatten layer may be negatively impacting performance. Flatten converts the entire feature map into a very large vector, effectively preserving all spatial activations in a high-dimensional representation. In contrast, GlobalAveragePooling2D reduces each feature map to a single value by averaging activations, resulting in a more compact representation. This approach summarizes how strongly each detector is activated and may improve generalization, especially in small datasets.
+
+|Accuracy|Precision|Recall|F1 Score|Specificity|ROC-AUC
+|--|--|--|--|--|--|
+|0.6078431372549019|0.6078431372549019|1.0|0.7560975609756098|0.0|0.5072580645161291|
+
+
+![Confusion matrix](./reports/cnn_propia_03/confusion_matrix.png)
+
+The loss graph has been created starting from the 1st earliest epoch so it can be visually analized. The loss graph seemed to stay consistently for epoch, all the values where between 0.68 and 0.64, matching the EarlyStopping patience value this indicates that the model did not improve after the first epoch. This model apported more knowledge and around how convolutional neuronal networks improve, but the overall model does not indicate improvement. 
+
+![Loss metric](./reports/cnn_propia_03/loss.png)
+![Accuracy metric](./reports/cnn_propia_03/accuracy.png)
+
+
+These are the changes after for the next model iteration:
+- Learning rate: 0.0001 <- 0.01
+- Flatten layer was replaced with GlobalAveragePooling2D, and the Dense layer with 32 units was removed. 
+- Dense layer was removed because it significantly increases the number of trainable parameters. 
+
+This change was motivated by the hypothesis that Flatten may not be the most appropriate choice for this architecture, as it expands the feature maps into a very large vector and can lead to inefficient representations of spatial information. In contrast, GlobalAveragePooling2D reduces each feature map to a single value, which can help preserve the most relevant activations while improving generalization.
+
+Although the initial goal was to maintain a model with around 500k parameters, this revised architecture further reduces complexity and helps mitigate overfitting risks. The learning rate was also reset to 0.0001 to ensure stable training after these structural changes. As a result, the total number of parameters was reduced dramatically from approximately 8.4 million to 28,673.
+
+Architecture changes:
+- GlobalAveragePooling2D layer <- Flatten layer 
+- Non-Output Dense layer removed
+
+
+
+
+## 4. Model cnn_propia_04
+
+There is a noticeable improvement in specificity, although the model previously suffered from a strong bias toward predicting all samples as positive. In this iteration, it has begun correctly identifying negative cases, achieving approximately 25% correct classification of negatives in the test set. This indicates a partial recovery in class balance handling, even if performance is still limited.
+
+The architectural changes, particularly replacing Flatten with GlobalAveragePooling2D and removing the Dense layer, appear to have had a significant positive impact. It is possible that most of the improvement comes from removing the Dense layer, since it previously introduced a large number of parameters and may have contributed to overfitting. Additionally, maintaining a lower learning rate of 0.0001 likely helped stabilize training and reduced the tendency to converge toward a trivial solution dominated by positive predictions. Although the F1 score decreased by approximately 10% compared to the previous model, this trade-off is acceptable given the improvement in specificity, which addresses the main weakness observed in earlier iterations.
+
+### Training Configuration
+
+- Image size: 256 × 256  
+- Batch size: 8  
+- Epochs: 100  
+- Learning rate: 0.0001
+- Dropout: 0.5  
+- Loss function: binary crossentropy  
+- Output activation: sigmoid  
+- Label mode: binary  
+- Early stopping patience: 15
+- Classification threshold: 0.5  
+- Random seed: 42  
+
+|Accuracy|Precision|Recall|F1 Score|Specificity|ROC-AUC|
+|--|--|--|--|--|--|
+|0.5294117647058824|0.5945945945945946|0.7096774193548387|0.6470588235294118|0.25|0.5145161290322581|
+
+![Confusion matrix](./reports/cnn_propia_04/confusion_matrix.png)
+![Loss metric](./reports/cnn_propia_04/loss.png)
+![F1score metric](./reports/cnn_propia_04/f1score.png)
+![Recall metric](./reports/cnn_propia_04/recall.png)
+![Accuracy metric](./reports/cnn_propia_04/accuracy.png)
+
+
+An intermediate experiment was conducted by adding a third identical convolutional block, increasing the total number of parameters to 74,913. However, this change reintroduced the previous issue where validation recall remained at 1.0 while the specificity still was lower than 0.1, indicating that the model was again biased toward predicting all samples as positive.
+
+In practice, EarlyStopping controls the actual training duration, but the intent was to give the model additional opportunity to improve. During training, it was observed that after approximately epoch 55, recall began to decrease, and the model started predicting negative cases more frequently. This is a positive sign, as previous versions failed to identify negative samples at all. However, this behavior may also indicate potential overfitting, since performance degradation appears after extended training.
+
+These are the changes after for the next model iteration:
+- Number of epochs was increased: 200 <- 100.
+- EarlyStopping patience was reverted from 15 back to 10 to prevent excessive training. 
+- The final model configuration in this iteration contains 47,169 parameters (184.25 KB).
+
+Architecture changes:
+- Added an additional convolutional layer to each block (Conv2D of 32 neurons).
+
+
+
+
+## 5. Model cnn_propia_05
+
+Now, the model struggles more with detecting positive cases, as reflected by the larger number of false negatives. The recall curve also shows considerable fluctuations during later epochs, suggesting that the model's sensitivity to positive samples is somewhat unstable. Despite these challenges, the F1-score remains relatively high, oscillating around 0.75–0.80, which indicates a balanced trade-off between precision and recall. The training and validation loss curves consistently decrease over the epochs, indicating that the network is effectively minimizing prediction errors without exhibiting severe overfitting. Similarly, both accuracy and F1-score demonstrate an upward trend, reaching approximately 69% training accuracy and around 77% validation accuracy by the end of training. Overall, the F1 Score of this last version of the model is by far the worst of all previous versions, the model learned to detect more negatives, but in the process it changed its bias towards labeling them mostly as heatlhy.
+
+### Training Configuration
+
+- Image size: 256 × 256  
+- Batch size: 8  
+- Epochs: 200  
+- Learning rate: 0.0001
+- Dropout: 0.5  
+- Loss function: binary crossentropy  
+- Output activation: sigmoid  
+- Label mode: binary  
+- Early stopping patience: 10
+- Classification threshold: 0.5  
+- Random seed: 42  
+
+|Accuracy|Precision|Recall|F1 Score|Specificity|ROC-AUC|
+|--|--|--|--|--|--|
+|0.49019607843137253|0.6190476190476191|0.41935483870967744|0.5|0.6|0.4951612903225806|
+
+![Confusion matrix](./reports/cnn_propia_05/confusion_matrix.png)
+![Loss metric](./reports/cnn_propia_05/loss.png)
+![F1score metric](./reports/cnn_propia_05/f1score.png)
+![Recall metric](./reports/cnn_propia_05/recall.png)
+![Accuracy metric](./reports/cnn_propia_05/accuracy.png)
+
+
+
+
+
+
+## 6. Model resnet50
+
+Now with transfer learning, using resnet50, demonstrates excellent classification performance and a strong ability to generalize, as evidenced by the continuous improvement in training and validation metrics throughout the learning process. Accuracy and F1-score rapidly increase and stabilize above 95%, while the loss curves consistently decrease and remain low, indicating effective optimization and convergence. 
+
+### Training Configuration
+
+- Image size: 256 × 256  
+- Batch size: 8  
+- Epochs: 200  
+- Learning rate: 0.0001
+- Dropout: 0.5  
+- Loss function: binary crossentropy  
+- Output activation: sigmoid  
+- Label mode: binary  
+- Early stopping patience: 10
+- Classification threshold: 0.5  
+- Random seed: 42  
+
+The close alignment between training and validation curves suggests that overfitting is minimal despite the high performance achieved. Furthermore, the confusion matrix shows that the model correctly classified 43 out of 51 samples, with only 3 false positives and 5 false negatives, resulting in a high level of reliability across both classes. The recall metric remains close to 100% for the validation set during most epochs, demonstrating the model’s capability to identify positive cases while maintaining the balanced.
+
+![Confusion matrix](./reports/resnet50/confusion_matrix.png)
+![Loss metric](./reports/resnet50/loss.png)
+![F1score metric](./reports/resnet50/f1score.png)
+![Recall metric](./reports/resnet50/recall.png)
+![Accuracy metric](./reports/resnet50/accuracy.png)
+
+
+
+
+## 6. Model efficientnetb0
+
+Now with transfer learning, using efficientnetb0, exhibits outstanding classification performance and strong generalization capabilities, as demonstrated by the increase in training and validation accuracy, F1-score, and recall throughout the training process.
+
+### Training Configuration
+
+- Image size: 256 × 256  
+- Batch size: 8  
+- Epochs: 200  
+- Learning rate: 0.0001
+- Dropout: 0.5  
+- Loss function: binary crossentropy  
+- Output activation: sigmoid  
+- Label mode: binary  
+- Early stopping patience: 10
+- Classification threshold: 0.5  
+- Random seed: 42  
+
+Validation accuracy remains consistently high, stabilizing around 96–100%, while the loss curves show a continuous decrease, indicating effective learning and convergence without signs of significant overfitting. The close relationship between training and validation metrics suggests that the model is able to learn meaningful patterns and maintain robust performance on unseen data. 
+
+This is further supported by the confusion matrix, where 46 out of 51 samples were correctly classified, with only 2 false positives and 3 false negatives. Recall values, approaching 100% for both training and validation sets, highlight the model’s strong ability to identify positive instances while maintaining excellent performance. 
+
+![Confusion matrix](./reports/efficientnetb0/confusion_matrix.png)
+![Loss metric](./reports/efficientnetb0/loss.png)
+![F1score metric](./reports/efficientnetb0/f1score.png)
+![Recall metric](./reports/efficientnetb0/recall.png)
+![Accuracy metric](./reports/efficientnetb0/accuracy.png)
+
+
+
+
+
+## Discussion
+
+When compared with other attempts of image classification with this limited dataset, the results are quite underwhelming. As seen in [this notebook](https://www.kaggle.com/code/muhammadfaizan65/90-animals-image-classification-efficientnetb3/notebook) The author was able to achieve an F1 score of 0.94 and validation accuracy of 93%. This was achieved using the EfficientNetB3 model with transfer learning and data augmentation. It seem that the VGG19 model is not the best choice for this task. The EfficientNetB3 model is more recent and has been shown to outperform the VGG19 model in most tasks as shown in [2].
+I should have tried to make variation of getting the best model based on ROC AUC instead of val_f1score
+ROC AUC es una métrica estándar en Machine Learning y estadística que evalúa qué tan bien un modelo distingue entre dos clases diferentes. Representa la probabilidad de que el modelo asigne un puntaje mayor a un caso positivo real que a uno negativo.
+2. AUC (Area Under the Curve)Es el Área Bajo la Curva ROC. Resume toda la curva en un solo número que varía entre 0.5 y 1.0:1.0: Es un modelo perfecto que distingue las clases sin errores.0.5: Es el equivalente a lanzar una moneda al aire; el modelo no tiene capacidad de predicción.> 0.8: Generalmente se considera un modelo bueno o excelente.
+
+Last model its Overall results indicate that the model is highly reliable and well-suited for practical classification tasks, although further evaluation on larger and more diverse datasets would provide additional confirmation of its robustness and real-world applicability.
+
+![Global Metrics Heatmap](./reports/_global/global_metrics_heatmap.png)
+
+
+## References
+
+- Maus, J., Nitschke, J., Nikulin, P., Hofheinz, F., Barth, M., Lemm, S., … Ullrich, M. (2026). Automatic Delineation of Tumor Spheroids in Microscopic Images Using Deep-Learning. ACS Measurement Science Au, 6(2), 411–420. doi:10.1021/acsmeasuresciau.5c00172
+- He, K., Zhang, X., Ren, S., y Sun, J. (2015). Deep residual learning for image recognition. arXiv. https://doi.org/10.48550/arXiv.1512.03385
+- Hinton, G. E., Srivastava, N., Krizhevsky, A., Sutskever, I., y Salakhutdinov, R. R. (2012). Improving neural networks by preventing co-adaptation of feature detectors. arXiv. https://doi.org/10.48550/arXiv.1207.0580
+- Angelina, C. L., Xiao, F.-R., Vyas, S., Yang, P.-C., Chang, H.-T., & Luo, Y. (2026). Mod-SE(2): A geometric deep learning framework for brain tumor classification and segmentation in MRI images. Journal of Biomedical Science, 33, Article 11. https://doi.org/10.1186/s12929-025-01213-y

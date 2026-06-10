@@ -12,7 +12,7 @@ La grafica se detiene a las 10 epochs, y esa cantidad es mencionada en early sto
 - Cambio de las neuronas: 8,417,377 params <- ~500k params
 
 ```text
-# Modelo inspirado de VGG16 https://doi.org/10.48550/arXiv.1512.03385
+# Modelo inspirado de VGG19 https://doi.org/10.48550/arXiv.1512.03385
 model = Sequential()
 model.add(Input(shape=(IMG_SIZE, IMG_SIZE, 3)))
 model.add(data_augmentation)
