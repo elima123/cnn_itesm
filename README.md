@@ -176,7 +176,7 @@ Additionally, the loss decreased sharply from 2.5 to 0.6 during the first epoch,
 ![Accuracy metric](./reports/cnn_propia_02/accuracy.png)
 
 
-These are the changes after for the next model iteration:
+These are the changes for the next model iteration:
 - Learning rate: 0.01 <- 0.001
 - EarlyStopping patience: 15 epochs <- 10 epochs
 - Switch checkpoint saving criteria: Save best based on F1 Score granted from validation <- Accuracy from validation
@@ -226,7 +226,7 @@ The loss graph has been created starting from the 1st earliest epoch so it can b
 ![Accuracy metric](./reports/cnn_propia_03/accuracy.png)
 
 
-These are the changes after for the next model iteration:
+These are the changes for the next model iteration:
 - Learning rate: 0.0001 <- 0.01
 - Flatten layer was replaced with GlobalAveragePooling2D, and the Dense layer with 32 units was removed. 
 - Dense layer was removed because it significantly increases the number of trainable parameters. 
@@ -277,7 +277,7 @@ An intermediate experiment was conducted by adding a third identical convolution
 
 In practice, EarlyStopping controls the actual training duration, but the intent was to give the model additional opportunity to improve. During training, it was observed that after approximately epoch 55, recall began to decrease, and the model started predicting negative cases more frequently. This is a positive sign, as previous versions failed to identify negative samples at all. However, this behavior may also indicate potential overfitting, since performance degradation appears after extended training.
 
-These are the changes after for the next model iteration:
+These are the changes for the next model iteration:
 - Number of epochs was increased: 200 <- 100.
 - EarlyStopping patience was reverted from 15 back to 10 to prevent excessive training. 
 - The final model configuration in this iteration contains 47,169 parameters (184.25 KB).
