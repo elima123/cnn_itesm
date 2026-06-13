@@ -1,22 +1,22 @@
-# Detection of brain tumors in MRI brain images
+# Detection of Brain Tumors in MRI Brain Images
 
 Alfonso Imanol Macias Marañon - A01808099
 
-## Project description
+## Project Description
 
-The main objective of this project is to use machine learning to accurately classify MRI images into two categories: healthy tissue and images containing tumors.
+The main objective of this project is to apply machine learning to accurately classify brain MRI images into two categories: healthy tissue and images containing tumors.
 
-## Dataset description
+## Dataset Description
 
 The dataset used in this project was obtained from the [Brain MRI Images for Brain Tumor Detection](https://www.kaggle.com/datasets/navoneel/brain-mri-images-for-brain-tumor-detection) platform and consists of a collection of brain magnetic resonance imaging (MRI) scans designed for brain tumor detection. 
 
-The dataset is divided into two main categories: images labeled **“yes”**, which contain abnormalities or spheroids associated with brain diseases and potential tumors, and images labeled **“no”**, which do not exhibit such abnormalities.
+The dataset is divided into two main categories: images labeled **“yes”**, which contain abnormalities or abnormalities associated with brain tumors, and images labeled **“no”**, which do not exhibit such abnormalities.
 
 The complete dataset contains a total of 253 images, distributed as 155 images in the **“yes”** class and 98 images in the **“no”** class. 
 
-## Data preprocessing
+## Data Preprocessing
 
-### Data transformation
+### Data Transformation
 
 The first step was to preprocess the MRI images in order to improve model performance and facilitate the training process. The following transformations were applied:
 - Standardizing file names to facilitate visualization and iteration during data processing.
@@ -26,7 +26,7 @@ The first step was to preprocess the MRI images in order to improve model perfor
 
 These preprocessing steps were performed using the `cleandataset.py` script. The script processed the original Kaggle dataset by converting the images into pixel arrays, transforming them into grayscale representations, generating binary masks to identify the relevant brain region, and then cropping and resizing the images.
 
-### Data splitting
+### Data Splitting
 ```text
 data/
 └── dataset__readytouse/
@@ -58,7 +58,7 @@ The dataset was manually split into three subsets: **training**, **testing**, an
 
 The dataset was partitioned using an approximately balanced **60/20/20 split** across both classes, ensuring a similar class distribution in the training, testing, and validation subsets.
 
-### Data augmentation
+### Data Augmentation
 
 Due to the limited size of the dataset, data augmentation techniques were applied during training to increase data variability and improve the model's generalization ability. The following transformations were used:
 
@@ -72,7 +72,7 @@ These augmentations were applied dynamically during training, generating slightl
 ## Model training
 ### Hyperparameters (Model Configuration)
 
-The initial model configuration is the one below. This came from multiple references to adecuate and increase the model performance during training. Model configurations changed during iterations and after switching into another model, but the main configuration idea was compared through all investigation.
+The initial model configuration is the one below. This configuration was derived from findings reported in the literature and was used as the baseline for subsequent experiments. Model configurations changed during iterations and after switching into another model, but the main configuration idea was compared through all investigation.
 
 | Parameter | Value / Configuration | Rationale / Reference |
 | --- | --- | --- |
@@ -85,7 +85,7 @@ The initial model configuration is the one below. This came from multiple refere
 | **Loss Function** | Binary Cross-Entropy | Selected to complement the single-neuron sigmoid output. |
 | **Optimizer** | Adam | Back propagation optimization. |
 | **Data Augmentation** | Rotation, translation, zoom, and contrast | Applied only to training batches to reduce overfitting in the small dataset. |
-| **Threshold** | 0.5 | The number required to identify and separate classes between each other. Since the main class is "yes" (tumor found), predicting a number over 0.5 means the neuronal network labeled it as tumor found.
+| **Threshold** | 0.5 | The number required to identify and separate classes between each other. Since the main class is "yes" (tumor found), predicting a number over 0.5 means the neural network labeled it as tumor found.
 
 
 
@@ -118,7 +118,7 @@ Lastly, the head contained:
 - Dropout 0.5
 - Dense 1, sigmoid activation
 
-Thre results showed 536,401 params (2.05 MB), which, after investigation, seemed like quite a lot for this dataset (253 images).
+The results showed 536,401 params (2.05 MB), which, after investigation, seemed like quite a lot for this dataset (253 images).
 
 |Accuracy|Precision|Recall|F1 Score|Specificity|ROC-AUC|
 |---|---|---|--|---|--|
@@ -135,7 +135,7 @@ The learning rate and training process appeared to be stable. Loss curves were u
 ![Loss metric](./reports/cnn_propia_01/loss.png)
 ![Accuracy metric](./reports/cnn_propia_01/accuracy.png)
 
-Based on these observations, the next experiment focused on reducing the learning rate from 0.001 to 0.0001. A lower learning rate should allow the model to learn more discriminative features from the images and potentially improve classification performance. The model will be trained from scratch to ensure a fair evaluation of the new configuration.
+Based on these observations, the next experiment focused on increasing the learning rate from 0.0001 to 0.001 in order to evaluate whether faster optimization would improve class discrimination. A lower learning rate should allow the model to learn more discriminative features from the images and potentially improve classification performance. The model will be trained from scratch to ensure a fair evaluation of the new configuration.
 
 
 
@@ -193,7 +193,7 @@ Architecture changes:
 
 ## 3. Model cnn_propia_03
 
-The performance decrease again notibly. The Recall came back to 1.0 and F1 score increased to 0.75. Comparing these results to the confussion matrix, the model is again predicting everything as tumor found.
+The performance decrease again noticeably. The Recall came back to 1.0 and F1 score increased to 0.75. Comparing these results to the confusion matrix, the model is again predicting everything as tumor found.
 
 ### Training Configuration
 
@@ -220,7 +220,7 @@ Given the small size of the dataset, the next step is to move toward transfer le
 
 ![Confusion matrix](./reports/cnn_propia_03/confusion_matrix.png)
 
-The loss graph has been created starting from the 1st earliest epoch so it can be visually analized. The loss graph seemed to stay consistently for epoch, all the values where between 0.68 and 0.64, matching the EarlyStopping patience value this indicates that the model did not improve after the first epoch. This model apported more knowledge and around how convolutional neuronal networks improve, but the overall model does not indicate improvement. 
+The loss graph has been created starting from the 1st earliest epoch so it can be visually analyzed. The loss graph seemed to stay consistently for epoch, all the values were between 0.68 and 0.64, matching the EarlyStopping patience value this indicates that the model did not improve after the first epoch. This model provided additional insights and around how convolutional neural networks improve, but the overall model does not indicate improvement. 
 
 ![Loss metric](./reports/cnn_propia_03/loss.png)
 ![Accuracy metric](./reports/cnn_propia_03/accuracy.png)
@@ -290,7 +290,7 @@ Architecture changes:
 
 ## 5. Model cnn_propia_05
 
-Now, the model struggles more with detecting positive cases, as reflected by the larger number of false negatives. The recall curve also shows considerable fluctuations during later epochs, suggesting that the model's sensitivity to positive samples is somewhat unstable. Despite these challenges, the F1-score remains relatively high, oscillating around 0.75–0.80, which indicates a balanced trade-off between precision and recall. The training and validation loss curves consistently decrease over the epochs, indicating that the network is effectively minimizing prediction errors without exhibiting severe overfitting. Similarly, both accuracy and F1-score demonstrate an upward trend, reaching approximately 69% training accuracy and around 77% validation accuracy by the end of training. Overall, the F1 Score of this last version of the model is by far the worst of all previous versions, the model learned to detect more negatives, but in the process it changed its bias towards labeling them mostly as heatlhy.
+Now, the model struggles more with detecting positive cases, as reflected by the larger number of false negatives. The recall curve also shows considerable fluctuations during later epochs, suggesting that the model's sensitivity to positive samples is somewhat unstable. Despite these challenges, the F1-score remains relatively high, oscillating around 0.75–0.80, which indicates a balanced trade-off between precision and recall. The training and validation loss curves consistently decrease over the epochs, indicating that the network is effectively minimizing prediction errors without exhibiting severe overfitting. Similarly, both accuracy and F1-score demonstrate an upward trend, reaching approximately 69% training accuracy and around 77% validation accuracy by the end of training. Overall, the F1 Score of this last version of the model is by far the worst of all previous versions, the model learned to detect more negatives, but in the process it changed its bias towards labeling them mostly as healthy.
 
 ### Training Configuration
 
@@ -323,7 +323,7 @@ Now, the model struggles more with detecting positive cases, as reflected by the
 
 ## 6. Model resnet50
 
-Now with transfer learning, using resnet50, demonstrates excellent classification performance and a strong ability to generalize, as evidenced by the continuous improvement in training and validation metrics throughout the learning process. Accuracy and F1-score rapidly increase and stabilize above 95%, while the loss curves consistently decrease and remain low, indicating effective optimization and convergence. 
+The ResNet50 transfer learning model demonstrates excellent classification performance and a strong ability to generalize, as evidenced by the continuous improvement in training and validation metrics throughout the learning process. Accuracy and F1-score rapidly increase and stabilize above 95%, while the loss curves consistently decrease and remain low, indicating effective optimization and convergence. 
 
 ### Training Configuration
 
@@ -339,7 +339,7 @@ Now with transfer learning, using resnet50, demonstrates excellent classificatio
 - Classification threshold: 0.5  
 - Random seed: 42  
 
-The close alignment between training and validation curves suggests that overfitting is minimal despite the high performance achieved. Furthermore, the confusion matrix shows that the model correctly classified 43 out of 51 samples, with only 3 false positives and 5 false negatives, resulting in a high level of reliability across both classes. The recall metric remains close to 100% for the validation set during most epochs, demonstrating the model’s capability to identify positive cases while maintaining the balanced.
+The close alignment between training and validation curves suggests that overfitting is minimal despite the high performance achieved. Furthermore, the confusion matrix shows that the model correctly classified 43 out of 51 samples, with only 3 false positives and 5 false negatives, resulting in a high level of reliability across both classes. The recall metric remains close to 100% for the validation set during most epochs, demonstrating the model’s capability to identify positive cases while maintaining balanced performance across both classes.
 
 ![Confusion matrix](./reports/resnet50/confusion_matrix.png)
 ![Loss metric](./reports/resnet50/loss.png)
@@ -352,7 +352,7 @@ The close alignment between training and validation curves suggests that overfit
 
 ## 6. Model efficientnetb0
 
-Now with transfer learning, using efficientnetb0, exhibits outstanding classification performance and strong generalization capabilities, as demonstrated by the increase in training and validation accuracy, F1-score, and recall throughout the training process.
+The EfficientNetB0 transfer learning model exhibits outstanding classification performance and strong generalization capabilities, as demonstrated by the increase in training and validation accuracy, F1-score, and recall throughout the training process.
 
 ### Training Configuration
 
@@ -384,7 +384,7 @@ This is further supported by the confusion matrix, where 46 out of 51 samples we
 
 ## Discussion 
 
-The baseline model became increasingly usable throughout the training iterations. However, the final model was not sufficiently competitive because the achieved F1-score remained relatively modest after the Specificity was fixed. 
+The baseline model became increasingly usable throughout the training iterations. However, the final model was not sufficiently competitive because the achieved F1-score remained relatively modest after improvements in specificity were achieved. 
 
 Although the dataset used for this project was suitable for experimentation and rapid prototyping due to its lightweight size (fewer than 200 images), it represents a limitation. Larger datasets are available on Kaggle, many containing over 2,000 images with greater variability in patient characteristics. Using a larger dataset would likely have improved the model's ability to generalize and reduced the risk of overfitting.
 
