@@ -186,7 +186,7 @@ Finally, the architecture was redesigned to significantly increase the number of
 
 Architecture changes:
 - Removed one block from the network (Conv2D + Conv2D + MaxPooling2D)
-- Increased the number of neurons for each convolutional layer: 32 <- 16
+- Increased the number of kernels for each convolutional layer: 32 <- 16
 
 
 
@@ -283,9 +283,7 @@ These are the changes for the next model iteration:
 - The final model configuration in this iteration contains 47,169 parameters (184.25 KB).
 
 Architecture changes:
-- Added an additional convolutional layer to each block (Conv2D of 32 neurons).
-
-
+- Added an additional convolutional layer to each block (Convolutional of 32 kernels).
 
 
 ## 5. Model cnn_propia_05
